@@ -1,4 +1,14 @@
-# kudos api
+# kudos BASE api
+
+> Prerequisites: Install Diesel CLI locally to use make file nigration
+
+HOW TO RUN:
+
+```bash
+$ make db-up
+$ make db-migrate
+$ make run
+```
 
 # Local Development
 
