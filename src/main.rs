@@ -1,13 +1,12 @@
 mod types;
 
-use db::utils::init_db;
-use warp::Filter;
-
 use crate::types::ApiConfig;
 
-mod contributions;
 mod db;
-mod handlers;
+mod errors;
+mod utils;
+
+// Routes
 mod health;
 
 #[cfg(test)]
@@ -23,21 +22,10 @@ async fn run() {
         http_server_host: host,
         http_server_port: port,
         database_url,
-        database_init_file,
     } = ApiConfig::new();
 
-    // init db
-    let db = init_db(database_url, database_init_file).await.unwrap(); //If there's an error the api should panic
-
-    let health_route = health::routes::routes(db.clone());
-    let contribution_route = contributions::routes::routes(db);
-    let error_handler = handlers::error_handler;
-
-    // string all the routes together
-    let routes = health_route
-        .or(contribution_route)
-        .with(warp::cors().allow_any_origin())
-        .recover(error_handler);
+    let db = utils::setup_db(&database_url).await;
+    let app_filters = utils::setup_filters(db);
 
     let addr = format!("{}:{}", host, port)
         .parse::<std::net::SocketAddr>()
@@ -45,5 +33,5 @@ async fn run() {
 
     println!("listening on {}", addr);
 
-    warp::serve(routes).run(addr).await;
+    warp::serve(app_filters).run(addr).await;
 }

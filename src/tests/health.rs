@@ -1,18 +1,18 @@
 #[cfg(test)]
 mod tests {
     use crate::{
+        db::errors::DBError,
         health::{db::DBHealth, routes::routes},
-        init_db,
+        types::ApiConfig,
+        utils::setup_db,
     };
-    use mobc::async_trait;
-    use warp::{reject, test::request};
+    use warp::test::request;
 
     #[derive(Clone)]
     pub struct DBMock {}
 
-    #[async_trait]
     impl DBHealth for DBMock {
-        async fn health(&self) -> Result<(), reject::Rejection> {
+        fn health(&self) -> Result<(), DBError> {
             Ok(())
         }
     }
@@ -26,21 +26,12 @@ mod tests {
     }
 
     #[tokio::test]
-    #[ignore]
     async fn test_health_db() {
-        let db = init_db(
-            "postgres://postgres:password@localhost:5432/database".to_string(),
-            "db.sql".to_string(),
-        )
-        .await
-        .unwrap();
-
+        let ApiConfig { database_url, .. } = ApiConfig::new();
+        let db = setup_db(&database_url).await;
         let r = routes(db);
         let resp = request().path("/health").reply(&r).await;
         assert_eq!(resp.status(), 200);
         assert!(resp.body().is_empty());
     }
 }
-
-// TODO: add e2e test using a real http server.
-// hyper can be used for that

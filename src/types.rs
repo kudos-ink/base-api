@@ -10,23 +10,18 @@ pub struct ApiConfig {
     pub http_server_port: u16,
     /// Database URL.
     pub database_url: String,
-    /// Database init file.
-    pub database_init_file: String,
 }
 
 impl ApiConfig {
     pub fn new() -> Self {
         dotenv().ok();
         Self {
-            http_server_host: env::var("HTTP_SERVER_HOST")
-                .unwrap_or_else(|_| "127.0.0.1".to_owned()),
-            http_server_port: env::var("HTTP_SERVER_PORT")
+            http_server_host: env::var("HOST").unwrap_or_else(|_| "127.0.0.1".to_owned()),
+            http_server_port: env::var("PORT")
                 .unwrap_or_else(|_| "8000".to_owned())
                 .parse()
-                .expect("Invalid HTTP_SERVER_PORT"),
+                .expect("Invalid PORT"),
             database_url: env::var("DATABASE_URL").expect("DATABASE_URL must be set"),
-            database_init_file: env::var("DATABASE_INIT_FILE")
-                .expect("DATABASE_INIT_FILE must be set"),
         }
     }
 }
